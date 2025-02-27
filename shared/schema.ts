@@ -24,6 +24,10 @@ export const insertSalarySchema = createInsertSchema(salaries).omit({
   createdAt: true,
 });
 
+export const updateSalarySchema = insertSalarySchema.extend({
+  id: z.number(),
+});
+
 export const insertExpenseSchema = createInsertSchema(expenses).omit({
   id: true,
   createdAt: true,
@@ -41,6 +45,7 @@ export const categories = [
 
 export type Category = typeof categories[number];
 export type InsertSalary = z.infer<typeof insertSalarySchema>;
+export type UpdateSalary = z.infer<typeof updateSalarySchema>;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type Salary = typeof salaries.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;

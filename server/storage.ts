@@ -1,11 +1,13 @@
-import { type Salary, type InsertSalary, type Expense, type InsertExpense } from "@shared/schema";
+import { type Salary, type InsertSalary, type UpdateSalary, type Expense, type InsertExpense } from "@shared/schema";
 import { db } from "./db";
 import { salaries, expenses } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Salary operations
   getSalaries(): Promise<Salary[]>;
   createSalary(salary: InsertSalary): Promise<Salary>;
+  updateSalary(salary: UpdateSalary): Promise<Salary>;
 
   // Expense operations
   getExpenses(): Promise<Expense[]>;
@@ -21,6 +23,16 @@ export class DatabaseStorage implements IStorage {
     const [salary] = await db
       .insert(salaries)
       .values(insertSalary)
+      .returning();
+    return salary;
+  }
+
+  async updateSalary(updateSalary: UpdateSalary): Promise<Salary> {
+    const { id, ...values } = updateSalary;
+    const [salary] = await db
+      .update(salaries)
+      .set(values)
+      .where(eq(salaries.id, id))
       .returning();
     return salary;
   }

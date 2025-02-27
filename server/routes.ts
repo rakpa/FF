@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertSalarySchema, insertExpenseSchema } from "@shared/schema";
+import { insertSalarySchema, updateSalarySchema, insertExpenseSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Salary routes
@@ -16,6 +16,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: result.error });
     }
     const salary = await storage.createSalary(result.data);
+    res.json(salary);
+  });
+
+  app.put("/api/salaries/:id", async (req, res) => {
+    const result = updateSalarySchema.safeParse({
+      ...req.body,
+      id: parseInt(req.params.id),
+    });
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const salary = await storage.updateSalary(result.data);
     res.json(salary);
   });
 
