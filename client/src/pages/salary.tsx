@@ -30,6 +30,15 @@ export default function Salary() {
     },
   });
 
+  const editForm = useForm<UpdateSalary>({
+    resolver: zodResolver(insertSalarySchema),
+    defaultValues: editingSalary || {
+      amount: 0,
+      month: new Date().getMonth() + 1,
+      year: 2025,
+    },
+  });
+
   const { data: salaries } = useQuery<Salary[]>({ 
     queryKey: ["/api/salaries"]
   });
@@ -42,7 +51,7 @@ export default function Salary() {
       queryClient.invalidateQueries({ queryKey: ["/api/salaries"] });
       toast({ title: "Success", description: "Salary saved successfully" });
       form.reset();
-      setEditingSalary(null); //Added to close the dialog after successful submission
+      setEditingSalary(null);
     },
   });
 
@@ -73,6 +82,7 @@ export default function Salary() {
                 variant="outline"
                 onClick={() => {
                   setEditingSalary(existingSalary);
+                  editForm.reset(existingSalary);
                 }}
               >
                 Modify Existing
@@ -94,6 +104,15 @@ export default function Salary() {
     }
 
     mutation.mutate(data);
+  };
+
+  const handleUpdate = (data: UpdateSalary) => {
+    if (editingSalary) {
+      updateMutation.mutate({
+        ...data,
+        id: editingSalary.id,
+      });
+    }
   };
 
   const totalSalary = salaries?.reduce((sum, salary) => sum + salary.amount, 0) || 0;
@@ -190,32 +209,29 @@ export default function Salary() {
             <p>
               Update salary for {editingSalary && new Date(2025, editingSalary.month - 1).toLocaleString('default', { month: 'long' })} {editingSalary?.year}
             </p>
-            <div className="space-y-2">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Amount (PLN)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        value={editingSalary?.amount?.toString() || "0"} // Handle potential undefined amount
-                        onChange={(e) => {
-                          if (editingSalary) {
-                            const newAmount = parseInt(e.target.value);
-                            updateMutation.mutate({
-                              ...editingSalary,
-                              amount: newAmount
-                            });
-                          }
-                        }}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(handleUpdate)} className="space-y-4">
+                <FormField
+                  control={editForm.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Amount (PLN)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
+                  Update Salary
+                </Button>
+              </form>
+            </Form>
           </div>
         </DialogContent>
       </Dialog>
