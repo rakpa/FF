@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { type Salary, type Expense } from "@shared/schema";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
 export default function Dashboard() {
+  const [selectedMonth, setSelectedMonth] = React.useState<number>(new Date().getMonth() + 1);
+  
   const { data: salaries } = useQuery<Salary[]>({ 
     queryKey: ["/api/salaries"]
   });
@@ -20,7 +23,7 @@ export default function Dashboard() {
   const netSavings = totalSalary - totalExpenses;
 
   // Get current month (1-indexed)
-  const currentMonth = new Date().getMonth() + 1;
+  const currentMonth = selectedMonth;
   const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
   
   // Monthly data for chart
@@ -81,12 +84,25 @@ export default function Dashboard() {
 
       {/* Monthly Analysis Section */}
       <Card className="p-6">
-        <h2 className="mb-4 text-xl font-bold">Monthly Analysis</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Monthly Analysis</h2>
+          <select 
+            value={selectedMonth} 
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            className="px-3 py-1.5 border rounded-md bg-background"
+          >
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+              <option key={month} value={month}>
+                {new Date(2025, month - 1).toLocaleString('default', { month: 'long' })}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div>
-              <h3 className="mb-2 text-sm font-medium text-muted-foreground">Current Month</h3>
-              <p className="text-xl font-bold">{new Date().toLocaleString('default', { month: 'long' })}</p>
+              <h3 className="mb-2 text-sm font-medium text-muted-foreground">Selected Month</h3>
+              <p className="text-xl font-bold">{new Date(2025, currentMonth - 1).toLocaleString('default', { month: 'long' })}</p>
             </div>
             <div>
               <h3 className="mb-2 text-sm font-medium text-muted-foreground">Month Income</h3>
@@ -139,14 +155,22 @@ export default function Dashboard() {
         <h2 className="mb-4 text-xl font-bold">Monthly Overview</h2>
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyData}>
+            <BarChart 
+              data={monthlyData}
+              onClick={(data) => {
+                if (data && data.activePayload && data.activePayload[0]) {
+                  const clickedData = data.activePayload[0].payload;
+                  setSelectedMonth(clickedData.monthNumber);
+                }
+              }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="salary" name="Income" fill="#0088FE" />
-              <Bar dataKey="expenses" name="Expenses" fill="#FF8042" />
+              <Bar dataKey="salary" name="Income" fill="#0088FE" cursor="pointer" />
+              <Bar dataKey="expenses" name="Expenses" fill="#FF8042" cursor="pointer" />
             </BarChart>
           </ResponsiveContainer>
         </div>
