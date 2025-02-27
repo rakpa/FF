@@ -53,7 +53,9 @@ export default function Dashboard() {
         </Card>
         <Card className="p-6">
           <h3 className="mb-2 text-sm font-medium text-muted-foreground">Net Savings</h3>
-          <p className="text-2xl font-bold text-accent">{netSavings.toLocaleString()} PLN</p>
+          <p className={`text-2xl font-bold ${netSavings >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {netSavings.toLocaleString()} PLN
+          </p>
         </Card>
       </div>
 
