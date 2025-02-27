@@ -1,57 +1,41 @@
 import { type Salary, type InsertSalary, type Expense, type InsertExpense } from "@shared/schema";
+import { db } from "./db";
+import { salaries, expenses } from "@shared/schema";
 
 export interface IStorage {
   // Salary operations
   getSalaries(): Promise<Salary[]>;
   createSalary(salary: InsertSalary): Promise<Salary>;
-  
+
   // Expense operations
   getExpenses(): Promise<Expense[]>;
   createExpense(expense: InsertExpense): Promise<Expense>;
 }
 
-export class MemStorage implements IStorage {
-  private salaries: Map<number, Salary>;
-  private expenses: Map<number, Expense>;
-  private salaryId: number;
-  private expenseId: number;
-
-  constructor() {
-    this.salaries = new Map();
-    this.expenses = new Map();
-    this.salaryId = 1;
-    this.expenseId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getSalaries(): Promise<Salary[]> {
-    return Array.from(this.salaries.values());
+    return await db.select().from(salaries).orderBy(salaries.createdAt);
   }
 
   async createSalary(insertSalary: InsertSalary): Promise<Salary> {
-    const id = this.salaryId++;
-    const salary: Salary = {
-      ...insertSalary,
-      id,
-      createdAt: new Date(),
-    };
-    this.salaries.set(id, salary);
+    const [salary] = await db
+      .insert(salaries)
+      .values(insertSalary)
+      .returning();
     return salary;
   }
 
   async getExpenses(): Promise<Expense[]> {
-    return Array.from(this.expenses.values());
+    return await db.select().from(expenses).orderBy(expenses.createdAt);
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {
-    const id = this.expenseId++;
-    const expense: Expense = {
-      ...insertExpense,
-      id,
-      createdAt: new Date(),
-    };
-    this.expenses.set(id, expense);
+    const [expense] = await db
+      .insert(expenses)
+      .values(insertExpense)
+      .returning();
     return expense;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
