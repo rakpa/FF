@@ -1,36 +1,40 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+
 import { z } from "zod";
 
-export const salaries = pgTable("salaries", {
-  id: serial("id").primaryKey(),
-  amount: integer("amount").notNull(),
-  month: integer("month").notNull(),
-  year: integer("year").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+// Define types directly without using drizzle's pgTable
+export type Salary = {
+  id: number;
+  amount: number;
+  month: number;
+  year: number;
+  createdAt: Date;
+};
 
-export const expenses = pgTable("expenses", {
-  id: serial("id").primaryKey(),
-  amount: integer("amount").notNull(),
-  category: text("category").notNull(),
-  month: integer("month").notNull(),
-  year: integer("year").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export type Expense = {
+  id: number;
+  amount: number;
+  category: string;
+  month: number;
+  year: number;
+  createdAt: Date;
+};
 
-export const insertSalarySchema = createInsertSchema(salaries).omit({
-  id: true,
-  createdAt: true,
+// Zod schemas for validation
+export const insertSalarySchema = z.object({
+  amount: z.number(),
+  month: z.number(),
+  year: z.number(),
 });
 
 export const updateSalarySchema = insertSalarySchema.extend({
   id: z.number(),
 });
 
-export const insertExpenseSchema = createInsertSchema(expenses).omit({
-  id: true,
-  createdAt: true,
+export const insertExpenseSchema = z.object({
+  amount: z.number(),
+  category: z.string(),
+  month: z.number(),
+  year: z.number(),
 });
 
 export const categories = [
@@ -47,5 +51,3 @@ export type Category = typeof categories[number];
 export type InsertSalary = z.infer<typeof insertSalarySchema>;
 export type UpdateSalary = z.infer<typeof updateSalarySchema>;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
-export type Salary = typeof salaries.$inferSelect;
-export type Expense = typeof expenses.$inferSelect;

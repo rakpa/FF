@@ -1,7 +1,5 @@
+
 import { type Salary, type InsertSalary, type UpdateSalary, type Expense, type InsertExpense } from "@shared/schema";
-import { db } from "./db";
-import { salaries, expenses } from "@shared/schema";
-import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Salary operations
@@ -14,40 +12,61 @@ export interface IStorage {
   createExpense(expense: InsertExpense): Promise<Expense>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class InMemoryStorage implements IStorage {
+  private salaries: Salary[] = [];
+  private expenses: Expense[] = [];
+  private salaryIdCounter = 1;
+  private expenseIdCounter = 1;
+
   async getSalaries(): Promise<Salary[]> {
-    return await db.select().from(salaries).orderBy(salaries.createdAt);
+    return [...this.salaries].sort((a, b) => {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
   }
 
   async createSalary(insertSalary: InsertSalary): Promise<Salary> {
-    const [salary] = await db
-      .insert(salaries)
-      .values(insertSalary)
-      .returning();
+    const salary: Salary = {
+      id: this.salaryIdCounter++,
+      ...insertSalary,
+      createdAt: new Date()
+    };
+    this.salaries.push(salary);
     return salary;
   }
 
   async updateSalary(updateSalary: UpdateSalary): Promise<Salary> {
     const { id, ...values } = updateSalary;
-    const [salary] = await db
-      .update(salaries)
-      .set(values)
-      .where(eq(salaries.id, id))
-      .returning();
-    return salary;
+    const salaryIndex = this.salaries.findIndex(s => s.id === id);
+    
+    if (salaryIndex === -1) {
+      throw new Error(`Salary with id ${id} not found`);
+    }
+    
+    const updatedSalary: Salary = {
+      ...this.salaries[salaryIndex],
+      ...values,
+    };
+    
+    this.salaries[salaryIndex] = updatedSalary;
+    return updatedSalary;
   }
 
   async getExpenses(): Promise<Expense[]> {
-    return await db.select().from(expenses).orderBy(expenses.createdAt);
+    return [...this.expenses].sort((a, b) => {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {
-    const [expense] = await db
-      .insert(expenses)
-      .values(insertExpense)
-      .returning();
+    const expense: Expense = {
+      id: this.expenseIdCounter++,
+      ...insertExpense,
+      createdAt: new Date()
+    };
+    this.expenses.push(expense);
     return expense;
   }
 }
 
-export const storage = new DatabaseStorage();
+// Export a single instance of the storage for use throughout the application
+export const storage = new InMemoryStorage();

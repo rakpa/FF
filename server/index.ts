@@ -64,6 +64,7 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    console.log(`Server running on port ${port}`);
+    console.log(`Using in-memory storage instead of PostgreSQL`);
   });
 })();
