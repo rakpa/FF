@@ -39,6 +39,48 @@ export default function Salary() {
     },
   });
 
+  const handleSubmit = (data: InsertSalary) => {
+    const existingSalary = salaries?.find(
+      (s) => s.month === data.month && s.year === data.year
+    );
+
+    if (existingSalary) {
+      toast({
+        title: "Salary Already Exists",
+        description: (
+          <div className="mt-2 flex flex-col space-y-2">
+            <p>A salary entry for {new Date(2025, data.month - 1).toLocaleString('default', { month: 'long' })} {data.year} already exists.</p>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  toast({
+                    title: "Feature Coming Soon",
+                    description: "The ability to modify existing salaries will be added soon.",
+                  });
+                }}
+              >
+                Modify Existing
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => {
+                  mutation.mutate(data);
+                }}
+              >
+                Add New Entry
+              </Button>
+            </div>
+          </div>
+        ),
+        duration: 10000,
+      });
+      return;
+    }
+
+    mutation.mutate(data);
+  };
+
   const totalSalary = salaries?.reduce((sum, salary) => sum + salary.amount, 0) || 0;
 
   return (
@@ -46,7 +88,7 @@ export default function Salary() {
       <Card className="p-6">
         <h2 className="mb-4 text-2xl font-bold">Add Salary</h2>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="month"
