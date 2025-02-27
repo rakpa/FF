@@ -12,8 +12,8 @@ export function Sidebar() {
   const [location] = useLocation();
 
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-emerald-50 to-teal-50/50 border-r border-emerald-100 p-4">
-      <div className="mb-8 text-2xl font-bold text-emerald-700">
+    <div className="fixed left-0 top-0 h-full w-64 bg-purple-700 p-4">
+      <div className="mb-8 text-2xl font-bold text-white">
         Finance Tracker
       </div>
       <nav className="space-y-2">
@@ -21,8 +21,8 @@ export function Sidebar() {
           <Link key={path} href={path}>
             <a
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-emerald-700 transition-colors hover:bg-emerald-100/50",
-                location === path && "bg-emerald-100 text-emerald-900"
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-white/90 transition-colors hover:bg-purple-600",
+                location === path && "bg-purple-800 text-white"
               )}
             >
               <Icon className="h-5 w-5" />
